@@ -107,8 +107,8 @@ with st.sidebar:
                     env=env,
                 )
             if proc.returncode == 0:
-                st.success("完成！")
-                st.text(proc.stdout[-800:] if len(proc.stdout) > 800 else proc.stdout)
+                # 先把 log 存進 session_state，rerun 後再顯示
+                st.session_state["last_scrape_log"] = proc.stdout
                 st.cache_data.clear()
                 st.rerun()
             else:
@@ -127,9 +127,16 @@ with st.sidebar:
         run_discover = st.button("🔍 重新發現課程", width="stretch",
                                  help="重新爬列表頁取得最新排名，LLM 模式（~60 credits）")
         if run_update:
-            run_scraper([], "更新學生數中（約 2～4 分鐘）…")
+            run_scraper([], "更新學生數中（約 8～12 分鐘）…")
         if run_discover:
             run_scraper(["--discover"], "重新發現課程中（約 3～5 分鐘）…")
+
+        # 顯示上次爬取的 log（rerun 後持續顯示，直到下次爬取）
+        if "last_scrape_log" in st.session_state:
+            log = st.session_state["last_scrape_log"]
+            st.success("上次爬取完成")
+            with st.expander("查看 log", expanded=False):
+                st.text(log[-2000:] if len(log) > 2000 else log)
 
     st.divider()
 
