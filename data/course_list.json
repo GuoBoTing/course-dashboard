@@ -1,10 +1,22 @@
 {
   "hahow": [
     {
-      "course_name": "命運不求人，好運自己算｜周映君 x 翊樺的八字卜卦人生解惑課",
-      "teacher": "周映君 x 翊 樺",
-      "price": 4400,
-      "url": "https://hahow.in/courses/697ad2f66ab23a4709a4a732"
+      "course_name": "做自己的整理師—讓家清爽條理的第一堂收納課",
+      "teacher": "ReLife 整理收納",
+      "price": 3680,
+      "url": "https://hahow.in/courses/6853c99010588d28d93f050e"
+    },
+    {
+      "course_name": "找回身體最佳狀態｜動力鏈：人人必修的身體使用說明書",
+      "teacher": "啾c物理治療師",
+      "price": 11000,
+      "url": "https://hahow.in/courses/625eba90d3f1710007f5692c"
+    },
+    {
+      "course_name": "高效 AI 投資術：No Code 打造自動化股票理專",
+      "teacher": "Code Gym",
+      "price": 7980,
+      "url": "https://hahow.in/courses/68186cab7b691d6899006945"
     },
     {
       "course_name": "零基礎整形級彩妝術：個人五官臉型調整Ｘ全方位化妝聖經",
@@ -15,7 +27,7 @@
     {
       "course_name": "行銷複利成長計劃｜週更案例 x 每月聚會",
       "teacher": "行銷二代團｜Wawa x 傑哥 x Ryan",
-      "price": 3850,
+      "price": 5800,
       "url": "https://hahow.in/courses/6985b75f819290a66b9ce54b"
     },
     {
@@ -25,22 +37,46 @@
       "url": "https://hahow.in/courses/5fb6886a56addceac864bdcd"
     },
     {
-      "course_name": "高效 AI 投資術：No Code 打造自動化股票理專",
-      "teacher": "Code Gym",
-      "price": 7980,
-      "url": "https://hahow.in/courses/68186cab7b691d6899006945"
+      "course_name": "命運不求人，好運自己算｜周映君 x 翊樺的八字卜卦人生解惑課",
+      "teacher": "周映君 x 翊 樺",
+      "price": 11500,
+      "url": "https://hahow.in/courses/697ad2f66ab23a4709a4a732"
     },
     {
-      "course_name": "找回身體最佳狀態｜動力鏈：人人必修的身體使用說明書",
-      "teacher": "啾c物理治療師",
-      "price": 11000,
-      "url": "https://hahow.in/courses/625eba90d3f1710007f5692c"
+      "course_name": "黑木太太的實用日語課｜生活旅遊Ｘ口說練習Ｘ台日文化",
+      "teacher": "黑木太太",
+      "price": 6200,
+      "url": "https://hahow.in/courses/690c659d15ae5866fe31d492"
     },
     {
-      "course_name": "做自己的整理師—讓家清爽條理的第一堂收納課",
-      "teacher": "ReLife 整理收納",
+      "course_name": "雙週更新 | 用 AI 重建視覺設計流程：30 週接案 X 職場掌控力再升級",
+      "teacher": "沈彥霖_Daniel",
+      "price": 4280,
+      "url": "https://hahow.in/courses/69033839976236cde672d2b3"
+    },
+    {
+      "course_name": "設計整合力 — 企劃提案到行銷的通透魔法學",
+      "teacher": "慢熟工作室-楊少鈞",
       "price": 3680,
-      "url": "https://hahow.in/courses/6853c99010588d28d93f050e"
+      "url": "https://hahow.in/courses/68b97146441b6e0425cfcf2e"
+    },
+    {
+      "course_name": "手機操盤全攻略：當沖、隔日沖到波段交易的穩健實戰",
+      "teacher": "劉家誠 Jasper",
+      "price": 6280,
+      "url": "https://hahow.in/courses/68673fafcf9cc040dce3e71f"
+    },
+    {
+      "course_name": "WordPress 新手第一堂必修入門課",
+      "teacher": "平凡老師 - 李東霖",
+      "price": 0,
+      "url": "https://hahow.in/courses/63a966c0fe3cca6a555a86d8"
+    },
+    {
+      "course_name": "識人定江山：吳美玲的全方位姓名學圖鑑，掌握人際優勢與財富格局",
+      "teacher": "一課文創",
+      "price": 6800,
+      "url": "https://hahow.in/courses/6931203a3924d9fd37cec9cb"
     },
     {
       "course_name": "現代人必知的數位整理學｜整理師 Blair x 末羊子",
@@ -55,58 +91,214 @@
       "url": "https://hahow.in/courses/60d801869643fa393b2e209c"
     },
     {
-      "course_name": "雙週更新 | 用 AI 重建視覺設計流程：30 週接案 X 職場掌控力再升級",
-      "teacher": "沈彥霖_Daniel",
-      "price": 4280,
-      "url": "https://hahow.in/courses/69033839976236cde672d2b3"
+      "course_name": "Python 入門特訓 - 基礎實作到證照攻略",
+      "teacher": "電腦技能基金會",
+      "price": 1790,
+      "url": "https://hahow.in/courses/5bdaafa726b5640020754649"
     },
     {
-      "course_name": "編織靜謐時光：棒針入門與個性化禮物",
-      "teacher": "Mu/s Craft毛線球牧場",
-      "price": 3200,
-      "url": "https://hahow.in/courses/65d894c966f966aa12e9a88f"
+      "course_name": "Notion 實戰課程：打造專屬數位工作術",
+      "teacher": "雷蒙三十 生活黑客",
+      "price": 3380,
+      "url": "https://hahow.in/courses/6059aee039f2512548c187c6"
     },
     {
-      "course_name": "Procreate 插畫入門－從素描到風格",
-      "teacher": "曲奇放克",
-      "price": 2800,
-      "url": "https://hahow.in/courses/60bdbc454ee6592acad8e950"
+      "course_name": "AutoCAD 電腦繪圖2D基礎篇－紮實入門",
+      "teacher": "吳永進(JinnWu)",
+      "price": 2500,
+      "url": "https://hahow.in/courses/577d9599d0c303070041173a"
     },
     {
-      "course_name": "艾德導演的影像魔術 - 一個人拍出生活中的電影感",
-      "teacher": "Edo Lo",
-      "price": 2800,
-      "url": "https://hahow.in/courses/633ec02d334e330006aedcfe"
+      "course_name": "在台灣也能學一口漂亮英文！Phonics 自然發音&正音教學",
+      "teacher": "Tina Liu",
+      "price": 1200,
+      "url": "https://hahow.in/courses/598053e0acc137070007186a"
     },
     {
-      "course_name": "設計整合力 — 企劃提案到行銷的通透魔法學",
-      "teacher": "慢熟工作室-楊少鈞",
+      "course_name": "新時代的 AI 寫作課｜帶你打造個人高效寫作系統",
+      "teacher": "數位簡報室",
+      "price": 9900,
+      "url": "https://hahow.in/courses/6938ff2dacb0e57d1df34f6b"
+    },
+    {
+      "course_name": "自己幫自己加薪💰 /【2026 後端工程師就業培訓班＆專題班】限量名額倒數中 ！",
+      "teacher": "",
+      "price": 0,
+      "url": "https://hahow.in/campaigns/hex-202602-js"
+    },
+    {
+      "course_name": "Excel 新手入門必修課：從 0 開始",
+      "teacher": "Tina Wu",
+      "price": 990,
+      "url": "https://hahow.in/courses/60dd6d80638ed00aa99b5556"
+    },
+    {
+      "course_name": "Katie 凱蒂流動瑜珈：啟動熱能，身心修復",
+      "teacher": "凱蒂Katie",
+      "price": 1800,
+      "url": "https://hahow.in/courses/5db7c35221050f00219bc498"
+    },
+    {
+      "course_name": "日本財務師的富小孩理財課｜從零用錢開始，打造一生富足金錢觀",
+      "teacher": "橫山光昭",
+      "price": 4980,
+      "url": "https://hahow.in/courses/6948d5073c0b064355b0d756"
+    },
+    {
+      "course_name": "Power BI x AI 終極實戰：打造高效數據分析工作流",
+      "teacher": "Dax (Kiro)",
+      "price": 3000,
+      "url": "https://hahow.in/courses/5aced6bad21aee001e55e63a"
+    },
+    {
+      "course_name": "沙發上的插畫課｜用 iPad 畫出你的可愛風格",
+      "teacher": "Nuomi",
+      "price": 3900,
+      "url": "https://hahow.in/courses/674eacfdd554b4bcaaddc59a"
+    },
+    {
+      "course_name": "跟著韓娛學韓文！發音到初級文法一次掌握",
+      "teacher": "超有趣韓文",
+      "price": 2500,
+      "url": "https://hahow.in/courses/62283351bc5afd0006fa22e5"
+    },
+    {
+      "course_name": "邏輯表達力-周震宇的口語邏輯優化課",
+      "teacher": "周震宇",
       "price": 3680,
-      "url": "https://hahow.in/courses/68b97146441b6e0425cfcf2e"
+      "url": "https://hahow.in/courses/5fc4a352d375951a03cc0d45"
     },
     {
-      "course_name": "自我修復的科學冥想紓壓課 - 21 天心腦 Reset 計畫",
-      "teacher": "AIZen 科學冥想",
-      "price": 5800,
-      "url": "https://hahow.in/courses/68ee115e548ea8ee3f17e144"
+      "course_name": "Canva 入門到進階實戰｜零基礎做質感設計",
+      "teacher": "Particoo 設計社群",
+      "price": 2780,
+      "url": "https://hahow.in/courses/63c51483f31bd23580fe5264"
     },
     {
-      "course_name": "Amber 生活日文課， 28 單元開啟自學之旅",
-      "teacher": "Amber.L",
+      "course_name": "產品設計實戰：用Figma打造絕佳UI/UX",
+      "teacher": "Simon Lin",
+      "price": 4280,
+      "url": "https://hahow.in/courses/5ee4d65789dc7e4854909ba1"
+    },
+    {
+      "course_name": "全方位 LLM 實戰攻略：Code 出你的 AI 智能助理",
+      "teacher": "AI . FREE Team",
+      "price": 4500,
+      "url": "https://hahow.in/courses/6620be2333cc0d9a8c0cf998"
+    },
+    {
+      "course_name": "Notion 最新中文課：3 小時快速上手！打造個人數位工作站",
+      "teacher": "雷蒙三十 生活黑客",
+      "price": 1980,
+      "url": "https://hahow.in/courses/676d13cdbf1ecc2823515f6a"
+    },
+    {
+      "course_name": "占星之門安格斯｜跟著占星學十二宮位找出人生攻略",
+      "teacher": "占星之門",
       "price": 2580,
-      "url": "https://hahow.in/courses/6031136edd9bc1681035b892"
+      "url": "https://hahow.in/courses/5f32512287e38e4003edb3a4"
     },
     {
-      "course_name": "日常生活的榮格心理學｜開啟生命潛能Ｘ活出完整人生",
-      "teacher": "鄧惠文",
-      "price": 11000,
-      "url": "https://hahow.in/courses/6717664724df46854a63de96"
+      "course_name": "跟 YouTuber 莫彩曦學美國道地的英文說話習慣",
+      "teacher": "莫彩曦 Hailey",
+      "price": 1900,
+      "url": "https://hahow.in/courses/5f14aeabcad0d0afe5ea3898"
     },
     {
-      "course_name": "AI On Duty：職場必備 AI 工具與選擇策略",
-      "teacher": "高玉璁 Samuel",
-      "price": 7280,
-      "url": "https://hahow.in/courses/68d00855cb172574d9a1a3fe"
+      "course_name": "一次搞懂專案管理 - 從入門到業界實務",
+      "teacher": "林佳熹",
+      "price": 2800,
+      "url": "https://hahow.in/courses/5dd935075e4baa002072a10a"
+    },
+    {
+      "course_name": "每週更新｜半熟旅人的覺察與轉化：26 週榮格心理行動計畫",
+      "teacher": "王凱琳",
+      "price": 3990,
+      "url": "https://hahow.in/courses/6977bf0fdb92fe1c839f7c19"
+    },
+    {
+      "course_name": "紫微斗數 14 種命格原型，解讀你的生命地圖",
+      "teacher": "張盛舒",
+      "price": 1880,
+      "url": "https://hahow.in/courses/5ff825f4d86b7b613942ee70"
+    },
+    {
+      "course_name": "居家美胸養護術｜30 天養出自然集中好胸型",
+      "teacher": "蛋白C.Emily美胸教練",
+      "price": 5200,
+      "url": "https://hahow.in/courses/6879e7fbba7a55e9c6520aa6"
+    },
+    {
+      "course_name": "SQL的五十道練習：初學者友善的資料庫入門",
+      "teacher": "郭耀仁",
+      "price": 2980,
+      "url": "https://hahow.in/courses/5fd24f017687e53b086c7fe7"
+    },
+    {
+      "course_name": "創建高效模式：30 種零門檻 AI 工作應用術",
+      "teacher": "Selina",
+      "price": 7600,
+      "url": "https://hahow.in/courses/6841298da88edd8823da25d6"
+    },
+    {
+      "course_name": "Dify 零代碼革命—打造你的第一個 AI Agent",
+      "teacher": "凱文大叔",
+      "price": 4600,
+      "url": "https://hahow.in/courses/67b02fdcc058731dbfba3611"
+    },
+    {
+      "course_name": "AI 短影音剪輯：從點子到成片的高效快攻術",
+      "teacher": "Teunet",
+      "price": 3280,
+      "url": "https://hahow.in/courses/68355307523b46f2c0087700"
+    },
+    {
+      "course_name": "聲入人心-周震宇的人聲必修課",
+      "teacher": "周震宇",
+      "price": 3980,
+      "url": "https://hahow.in/courses/5bfd47782d018e0020e4b0e4"
+    },
+    {
+      "course_name": "米薩小姐塔羅課，推開生命靈性之門",
+      "teacher": "米薩小姐",
+      "price": 1880,
+      "url": "https://hahow.in/courses/5ffc2f33d86b7b5e5e47a757"
+    },
+    {
+      "course_name": "從親密到日常｜探索依附關係，跳脫情感的惡性循環",
+      "teacher": "遠距抱抱 x 抱抱診所心理師",
+      "price": 4230,
+      "url": "https://hahow.in/courses/691c8dff5c07997a3468f2a9"
+    },
+    {
+      "course_name": "【AI 深度學習】新手入門應用篇",
+      "teacher": "Abel Wang",
+      "price": 2500,
+      "url": "https://hahow.in/courses/5d5f8331e90dec002105b0c1"
+    },
+    {
+      "course_name": "台科 EMBA 年年爆滿的一門 Word 課（A系列）",
+      "teacher": "Tina Wu",
+      "price": 950,
+      "url": "https://hahow.in/courses/5a211b15a6d4a5001ec31247"
+    },
+    {
+      "course_name": "超級歪的哲學訓練課！帶你破解人性盲點，養成邏輯腦",
+      "teacher": "SuperY超級歪",
+      "price": 5400,
+      "url": "https://hahow.in/courses/686976d351036de87280dcd0"
+    },
+    {
+      "course_name": "資料變決策！Excel x AI 升級職場數據分析力",
+      "teacher": "彭其捷",
+      "price": 4100,
+      "url": "https://hahow.in/courses/60a37d9758ebab68b1891e03"
+    },
+    {
+      "course_name": "用 Python 理財：打造自己的 AI 股票理專",
+      "teacher": "FinLab",
+      "price": 3999,
+      "url": "https://hahow.in/courses/5b9d3a6dca498a001e917383"
     }
   ],
   "pressplay": [
@@ -127,6 +319,12 @@
       "teacher": "吳淡如",
       "price": 2438,
       "url": "https://www.pressplay.cc/project/83F8D94478987579DE4B8508888DBF31/about"
+    },
+    {
+      "course_name": "渣報 ｜像渣一樣小的事，都大報特報",
+      "teacher": "人渣文本(周偉航)",
+      "price": 70,
+      "url": "https://www.pressplay.cc/project/B78A9183329A9909B60314DE87CFB83A/about"
     },
     {
       "course_name": "脈輪能量自癒課｜從理解到實踐・修復七大脈輪",

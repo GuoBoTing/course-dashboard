@@ -321,17 +321,22 @@ else:
         lambda x: f"+{x:,.1f}" if pd.notna(x) and x > 0 else (f"{x:,.1f}" if pd.notna(x) else "—")
     )
 
-    display = table[[
-        "平台", "rank", "course_name", "teacher",
-        "price", "students", "成長率(%)", "成長速度(人/天)", "course_url"
-    ]].rename(columns={
-        "rank":        "排名",
-        "course_name": "課程名稱",
-        "teacher":     "老師",
-        "price":       "價格(NTD)",
-        "students":    "學生數",
-        "course_url":  "連結",
-    })
+    display = (
+        table
+        .sort_values("growth_rate", ascending=False, na_position="last")
+        [[
+            "平台", "rank", "course_name", "teacher",
+            "price", "students", "成長率(%)", "成長速度(人/天)", "course_url"
+        ]]
+        .rename(columns={
+            "rank":        "排名",
+            "course_name": "課程名稱",
+            "teacher":     "老師",
+            "price":       "價格(NTD)",
+            "students":    "學生數",
+            "course_url":  "連結",
+        })
+    )
 
     st.dataframe(
         display,
