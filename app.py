@@ -478,6 +478,28 @@ if st.session_state.get("is_admin"):
             st.cache_data.clear()
             st.rerun()
 
+    st.divider()
+    st.markdown("**🧹 批次清除**")
+
+    svc_ids = df[df["course_url"].str.contains("/services/", na=False)]["id"].tolist()
+    null_ids = df[df["students"].isna()]["id"].tolist()
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.caption(f"服務/工作坊頁面：{len(svc_ids)} 筆")
+        if st.button("🗑 清除服務/工作坊資料", disabled=len(svc_ids) == 0):
+            get_supabase().table("course_scrapes").delete().in_("id", svc_ids).execute()
+            st.success(f"已清除 {len(svc_ids)} 筆")
+            st.cache_data.clear()
+            st.rerun()
+    with col_b:
+        st.caption(f"學生數為空：{len(null_ids)} 筆")
+        if st.button("🗑 清除學生數空值資料", disabled=len(null_ids) == 0):
+            get_supabase().table("course_scrapes").delete().in_("id", null_ids).execute()
+            st.success(f"已清除 {len(null_ids)} 筆")
+            st.cache_data.clear()
+            st.rerun()
+
 # ── 頁尾 ──────────────────────────────────────────────────────────────────────
 
 st.divider()
