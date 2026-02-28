@@ -18,8 +18,8 @@ from firecrawl import FirecrawlApp
 
 COURSE_LIST_FILE = Path("data/course_list.json")
 PATTERNS = [
-    r"課程總人數[^\d]*([\d,]+)",   # 一般課
-    r"當前購買數[^\d]*([\d,]+)",   # 預購課
+    r"課程總人數.{0,100}?(\d{4,})",   # 一般課（≥1000 人）
+    r"當前購買數.{0,100}?(\d{4,})",   # 預購課（≥1000 人）
 ]
 
 def parse_int(s: str) -> int:
@@ -27,7 +27,7 @@ def parse_int(s: str) -> int:
 
 def extract_students(md: str):
     for pat in PATTERNS:
-        m = re.search(pat, md)
+        m = re.search(pat, md, re.DOTALL)
         if m:
             return parse_int(m.group(1)), pat
     return None, None
@@ -54,38 +54,30 @@ def main():
     app = FirecrawlApp(api_key=api_key)
     print(f"=== Hahow 測試：前 {n} 門課 ===\n")
 
+    matched_count = 0
     for i, course in enumerate(hahow_courses, 1):
         name = course.get("course_name", f"課程{i}")
         url  = course.get("url", "")
-        print(f"[{i}/{n}] {name}")
-        print(f"  URL: {url}")
 
         if not url.startswith("http"):
-            print("  ⚠ 無效 URL，跳過\n")
             continue
 
         try:
             res = app.scrape(url=url, formats=["markdown"], wait_for=5000)
             md  = res.markdown or ""
         except Exception as e:
-            print(f"  ✗ 爬取失敗：{e}\n")
             continue
 
         students, matched_pat = extract_students(md)
 
         if students is not None:
-            print(f"  ✓ 學生數：{students}  （pattern: {matched_pat}）")
-        else:
-            print("  ✗ 無法比對到學生數")
+            matched_count += 1
+            print(f"[{i}] {name}")
+            print(f"  學生數：{students}")
+            print(f"  URL：{url}")
+            print()
 
-        # 搜尋附近關鍵字，方便 debug
-        for label in ["課程總人數", "當前購買數", "人已購買", "學員"]:
-            idx = md.find(label)
-            if idx != -1:
-                snippet = md[max(0, idx-20):idx+60].replace("\n", " ")
-                print(f"  debug [{label}] → …{snippet}…")
-
-        print()
+    print(f"=== 完成：{n} 門中有 {matched_count} 門成功抓到學生數 ===")
 
 if __name__ == "__main__":
     main()

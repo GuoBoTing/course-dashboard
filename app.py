@@ -239,6 +239,7 @@ def compute_growth(df: pd.DataFrame) -> pd.DataFrame:
             "growth_speed":    speed,
             "days_elapsed":    day_diff if day_diff >= 1 else None,
             "scrape_count":    len(daily),
+            "course_url":      last.get("course_url", "") or "",
         })
     return pd.DataFrame(rows)
 
@@ -285,8 +286,10 @@ else:
 
         with st.container(border=True):
             col1, col2, col3, col4 = st.columns([4, 1, 1, 1])
+            url = row.get("course_url", "") or ""
+            name_md = f"[{row['course_name']}]({url})" if url else row['course_name']
             col1.markdown(
-                f"**{row['course_name']}**  \n"
+                f"**{name_md}**  \n"
                 f"<span style='color:gray'>{row['teacher']} ｜ {plabel}</span>",
                 unsafe_allow_html=True,
             )
@@ -320,16 +323,24 @@ else:
 
     display = table[[
         "平台", "rank", "course_name", "teacher",
-        "price", "students", "成長率(%)", "成長速度(人/天)"
+        "price", "students", "成長率(%)", "成長速度(人/天)", "course_url"
     ]].rename(columns={
         "rank":        "排名",
         "course_name": "課程名稱",
         "teacher":     "老師",
         "price":       "價格(NTD)",
         "students":    "學生數",
+        "course_url":  "連結",
     })
 
-    st.dataframe(display, use_container_width=True, hide_index=True)
+    st.dataframe(
+        display,
+        column_config={
+            "連結": st.column_config.LinkColumn("連結", display_text="🔗 開啟"),
+        },
+        use_container_width=True,
+        hide_index=True,
+    )
 
 st.divider()
 

@@ -71,10 +71,11 @@ PLATFORMS = {
             "url (full absolute URL, e.g. https://hahow.in/courses/slug)."
         ),
         "expect_chinese": True,
-        # 內頁 regex（優先比對課程資訊區塊的正確標籤）
+        # 內頁 regex（re.DOTALL；非貪婪跳過章節數等小數字）
+        # Hahow 頁面學生數無千分位，使用 4 位以上純數字即可
         "student_patterns": [
-            r"課程總人數[^\d]*([\d,]+)",   # 一般課
-            r"當前購買數[^\d]*([\d,]+)",   # 預購課
+            r"課程總人數.{0,100}?(\d{4,})",   # 一般課（≥1000 人）
+            r"當前購買數.{0,100}?(\d{4,})",   # 預購課（≥1000 人）
         ],
     },
     "pressplay": {
@@ -109,9 +110,9 @@ def parse_int(s: str) -> int:
     return int(s.replace(",", "").replace("，", ""))
 
 def extract_students_from_markdown(md: str, patterns: list[str]) -> int | None:
-    """用 regex 從 markdown 取出學生數。"""
+    """用 regex 從 markdown 取出學生數（re.DOTALL 讓 . 跨行）。"""
     for pat in patterns:
-        m = re.search(pat, md)
+        m = re.search(pat, md, re.DOTALL)
         if m:
             try:
                 return parse_int(m.group(1))
