@@ -19,7 +19,7 @@ from firecrawl import FirecrawlApp
 COURSE_LIST_FILE = Path("data/course_list.json")
 PATTERNS = [
     r"課程總人數.{0,100}?(\d{4,})",   # 一般課（≥1000 人）
-    r"當前購買數.{0,100}?(\d{4,})",   # 預購課（≥1000 人）
+    r"當前購買數.{0,100}?(\d+)",       # 預購課（任意人數）
 ]
 
 def parse_int(s: str) -> int:

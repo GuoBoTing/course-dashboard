@@ -77,10 +77,11 @@ PLATFORMS = {
         ),
         "expect_chinese": True,
         # 內頁 regex（re.DOTALL；非貪婪跳過章節數等小數字）
-        # Hahow 頁面學生數無千分位，使用 4 位以上純數字即可
+        # 課程總人數：4 位以上，避免誤抓章節數等小數字
+        # 當前購買數（募資/預購課）：context 夠精確，允許任意位數
         "student_patterns": [
             r"課程總人數.{0,100}?(\d{4,})",   # 一般課（≥1000 人）
-            r"當前購買數.{0,100}?(\d{4,})",   # 預購課（≥1000 人）
+            r"當前購買數.{0,100}?(\d+)",       # 預購課（任意人數）
         ],
     },
     "pressplay": {
@@ -180,11 +181,15 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
                 if before - len(courses):
                     print(f"  [{platform}] ⚠ 過濾 {before - len(courses)} 筆幻覺課程")
 
-            # 過濾 /services/ 頁面
+            # 過濾 /services/ 及 /campaigns/ 頁面（非課程）
             before_svc = len(courses)
-            courses = [c for c in courses if "/services/" not in c.get("url", "")]
+            courses = [
+                c for c in courses
+                if "/services/" not in c.get("url", "")
+                and "/campaigns/" not in c.get("url", "")
+            ]
             if before_svc - len(courses):
-                print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆服務/工作坊頁面")
+                print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆非課程頁面（服務/活動）")
 
             # 跨頁去重（以 URL 為 key）
             for c in courses:
