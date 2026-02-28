@@ -66,6 +66,8 @@ PLATFORMS = {
             "This page shows Hahow trending courses written in Traditional Chinese. "
             "The page may have a '近期熱門' (recently trending) featured section at the top — SKIP IT. "
             "Only extract courses from the '全部結果' (all results) section. "
+            "IMPORTANT: Each listing on Hahow is labeled as either '課程' (course), '服務' (service), or '工作坊' (workshop). "
+            "Only extract items labeled as '課程'. SKIP any item labeled '服務', '工作坊', or any label other than '課程'. "
             "IMPORTANT: Only extract courses that actually appear on this page. "
             "Do NOT invent or guess any course names. "
             "If you cannot find any courses in the content, return an empty list. "
@@ -87,6 +89,8 @@ PLATFORMS = {
     "pressplay": {
         "list_urls": [
             "https://www.pressplay.cc/project",
+            "https://www.pressplay.cc/project?page=2",
+            "https://www.pressplay.cc/project?page=3",
         ],
         "max_courses": 50,
         "list_prompt": (
@@ -181,15 +185,23 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
                 if before - len(courses):
                     print(f"  [{platform}] ⚠ 過濾 {before - len(courses)} 筆幻覺課程")
 
-            # 過濾 /services/ 及 /campaigns/ 頁面（非課程）
+            # 過濾非課程頁面
             before_svc = len(courses)
-            courses = [
-                c for c in courses
-                if "/services/" not in c.get("url", "")
-                and "/campaigns/" not in c.get("url", "")
-            ]
+            url_blocklist = ["/services/", "/campaigns/"]
+            # Hahow 課程 URL 必須包含 /courses/
+            if platform == "hahow":
+                courses = [
+                    c for c in courses
+                    if "/courses/" in c.get("url", "")
+                    and all(b not in c.get("url", "") for b in url_blocklist)
+                ]
+            else:
+                courses = [
+                    c for c in courses
+                    if all(b not in c.get("url", "") for b in url_blocklist)
+                ]
             if before_svc - len(courses):
-                print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆非課程頁面（服務/活動）")
+                print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆非課程頁面")
 
             # 跨頁去重（以 URL 為 key）
             for c in courses:
@@ -225,21 +237,28 @@ def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]])
 
             students = None
             if url and url.startswith("http"):
-                try:
-                    res = app.scrape(
-                        url=url,
-                        formats=["markdown"],
-                        wait_for=5000,
-                        proxy="stealth",
-                    )
-                    md = res.markdown or ""
-                    students = extract_students_from_markdown(md, patterns)
-                    print(f"    學生數：{students}")
-                    if students is None:
-                        preview = md[:400].replace("\n", " ")
-                        print(f"    ⚠ 無法匹配，markdown 前 400 字：{preview}")
-                except Exception as exc:
-                    print(f"    ✗ 爬取失敗：{exc}")
+                # 第一次失敗（popup/廣告遮蔽）自動用兩倍 wait_for 重試一次
+                for attempt, wait_ms in enumerate([5000, 10000], start=1):
+                    try:
+                        res = app.scrape(
+                            url=url,
+                            formats=["markdown"],
+                            wait_for=wait_ms,
+                            proxy="stealth",
+                        )
+                        md = res.markdown or ""
+                        students = extract_students_from_markdown(md, patterns)
+                        if students is not None:
+                            break
+                        if attempt == 1:
+                            print(f"    ⚠ 第1次未匹配，重試（wait={wait_ms*2}ms）…")
+                        else:
+                            preview = md[:400].replace("\n", " ")
+                            print(f"    ⚠ 第2次仍未匹配，markdown 前 400 字：{preview}")
+                    except Exception as exc:
+                        print(f"    ✗ 爬取失敗（第{attempt}次）：{exc}")
+                        break
+                print(f"    學生數：{students}")
             else:
                 print(f"    ⚠ 無效 URL，跳過")
 
