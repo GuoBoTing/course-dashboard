@@ -79,11 +79,11 @@ PLATFORMS = {
         ),
         "expect_chinese": True,
         # 內頁 regex（re.DOTALL；非貪婪跳過章節數等小數字）
-        # 課程總人數：4 位以上，避免誤抓章節數等小數字
+        # 課程總人數：後接「位同學」精確匹配，任意人數（不需限制位數）
         # 當前購買數（募資/預購課）：context 夠精確，允許任意位數
         "student_patterns": [
-            r"課程總人數.{0,100}?(\d{4,})",   # 一般課（≥1000 人）
-            r"當前購買數.{0,100}?(\d+)",       # 預購課（任意人數）
+            r"課程總人數.{0,100}?(\d+)\s*位同學",  # 一般課（任意人數，含個位/十位/百位）
+            r"當前購買數.{0,100}?(\d+)",            # 預購課（任意人數）
         ],
     },
     "pressplay": {
@@ -237,26 +237,33 @@ def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]])
 
             students = None
             if url and url.startswith("http"):
-                # 第一次失敗（popup/廣告遮蔽）自動用兩倍 wait_for 重試一次
-                for attempt, wait_ms in enumerate([5000, 10000], start=1):
+                # 策略：先用 stealth proxy；
+                # 若 markdown 太短（<1500字，疑似被擋）→ 改用無 proxy 重試
+                attempts = [
+                    {"proxy": "stealth", "wait_for": 5000},
+                    {"proxy": None,      "wait_for": 5000},   # 無 proxy fallback
+                ]
+                for attempt_no, opt in enumerate(attempts, start=1):
                     try:
-                        res = app.scrape(
+                        scrape_kwargs = dict(
                             url=url,
                             formats=["markdown"],
-                            wait_for=wait_ms,
-                            proxy="stealth",
+                            wait_for=opt["wait_for"],
                         )
+                        if opt["proxy"]:
+                            scrape_kwargs["proxy"] = opt["proxy"]
+                        res = app.scrape(**scrape_kwargs)
                         md = res.markdown or ""
+                        if len(md) < 1500 and attempt_no < len(attempts):
+                            print(f"    ⚠ 第{attempt_no}次 markdown 過短({len(md)}字)，改用無proxy重試…")
+                            continue
                         students = extract_students_from_markdown(md, patterns)
                         if students is not None:
                             break
-                        if attempt == 1:
-                            print(f"    ⚠ 第1次未匹配，重試（wait={wait_ms*2}ms）…")
-                        else:
-                            preview = md[:400].replace("\n", " ")
-                            print(f"    ⚠ 第2次仍未匹配，markdown 前 400 字：{preview}")
+                        if attempt_no < len(attempts):
+                            print(f"    ⚠ 第{attempt_no}次未匹配，改用無proxy重試…")
                     except Exception as exc:
-                        print(f"    ✗ 爬取失敗（第{attempt}次）：{exc}")
+                        print(f"    ✗ 爬取失敗（第{attempt_no}次）：{exc}")
                         break
                 print(f"    學生數：{students}")
             else:
