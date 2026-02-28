@@ -1,0 +1,10 @@
+# 密鑰與本地環境
+.env
+.venv/
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
