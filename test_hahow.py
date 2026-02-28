@@ -19,8 +19,8 @@ from firecrawl import FirecrawlApp
 
 COURSE_LIST_FILE = Path("data/course_list.json")
 PATTERNS = [
-    r"課程總人數.{0,100}?(\d+)\s*位同學",  # 一般課（任意人數）
-    r"當前購買數.{0,100}?(\d+)",            # 預購課（任意人數）
+    r"(\d+)\s*位同學",            # 一般課
+    r"當前購買數.{0,100}?(\d+)",  # 預購課
 ]
 
 def parse_int(s: str) -> int:
@@ -48,8 +48,8 @@ def test_url(app: FirecrawlApp, url: str, name: str = ""):
         print(f"  匹配 pattern：{matched_pat}")
     else:
         print(f"✗ 未匹配任何 pattern（markdown 共 {len(md)} 字）")
-        # 搜尋跟學生數相關的關鍵字，印出前後 80 字
-        keywords = ["課程總人數", "當前購買數", "人學習", "人預購", "已購買", "同學", "學員", "購買數", "人已"]
+        # 搜尋學生數關鍵字，印出前後 80 字
+        keywords = ["位同學", "當前購買數"]
         found_any = False
         for kw in keywords:
             idx = md.find(kw)
