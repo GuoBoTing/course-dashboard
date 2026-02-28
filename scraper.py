@@ -241,7 +241,7 @@ def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]])
                 # 若 markdown 太短（<1500字，疑似被擋）→ 改用無 proxy 重試
                 attempts = [
                     {"proxy": "stealth", "wait_for": 5000},
-                    {"proxy": None,      "wait_for": 5000},   # 無 proxy fallback
+                    {"proxy": None,      "wait_for": 15000},  # 長等待 fallback（某些頁面需要 >5s 渲染）
                 ]
                 for attempt_no, opt in enumerate(attempts, start=1):
                     try:

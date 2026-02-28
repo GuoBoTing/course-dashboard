@@ -33,10 +33,10 @@ def extract_students(md: str):
             return parse_int(m.group(1)), pat
     return None, None
 
-def test_url(app: FirecrawlApp, url: str, name: str = ""):
-    print(f"URL：{url}")
+def test_url(app: FirecrawlApp, url: str, name: str = "", wait_ms: int = 5000):
+    print(f"URL：{url}  (wait_for={wait_ms}ms)")
     try:
-        res = app.scrape(url=url, formats=["markdown"], wait_for=5000)
+        res = app.scrape(url=url, formats=["markdown"], wait_for=wait_ms)
         md  = res.markdown or ""
     except Exception as e:
         print(f"✗ 爬取失敗：{e}")
@@ -73,10 +73,14 @@ def main():
     app = FirecrawlApp(api_key=api_key)
 
     # --url 模式：直接測單一 URL
+    # 支援 --wait N 額外參數，例如：python test_hahow.py --url https://... --wait 15000
     if len(sys.argv) >= 3 and sys.argv[1] == "--url":
         url = sys.argv[2]
+        wait_ms = 5000
+        if "--wait" in sys.argv:
+            wait_ms = int(sys.argv[sys.argv.index("--wait") + 1])
         print(f"=== 單一 URL 測試 ===\n")
-        test_url(app, url)
+        test_url(app, url, wait_ms=wait_ms)
         return
 
     # 一般模式：測前 N 門
