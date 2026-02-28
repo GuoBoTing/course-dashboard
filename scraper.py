@@ -5,9 +5,10 @@ Course Scraper（省 credit 版）
 省 credit 策略：
   1. 課程清單（名稱 + URL）快取在 data/course_list.json，
      只有加 --discover 參數時才重新爬列表頁（每次消耗 ~2 credits）。
-  2. Hahow 更新：用 LLM 從列表頁一次提取全部學生數（1 request），
-     只有募資課（LLM 回傳 null）才進內頁。
-  3. PressPlay 仍逐一爬個別頁（markdown + regex）。
+  2. Hahow discover：LLM 取課程名/老師/URL，同時 HTML 解析列表頁取得
+     類型（gkOCkQ）與學生數（dvCJUj）；非「課程」項目直接略過。
+  3. Hahow 更新：列表已有學生數 → 直接使用；無（預購課）→ 才進內頁。
+  4. PressPlay 仍逐一爬個別頁（markdown + regex）。
 
 使用方式：
   python scraper.py              # 只更新學生數（省 credit）
@@ -48,6 +49,7 @@ class CourseLink(BaseModel):
     teacher: str
     price: Optional[float] = None
     url: str
+    students: Optional[int] = None   # 從列表頁 HTML 取得（None 表示需進內頁）
 
 class CourseLinkPage(BaseModel):
     courses: List[CourseLink]
@@ -133,6 +135,51 @@ def extract_students_from_markdown(md: str, patterns: list[str]) -> int | None:
                 continue
     return None
 
+def parse_hahow_listing_html(html: str) -> dict[str, dict]:
+    """
+    解析 Hahow 列表頁 HTML，透過 CSS class substring 找出每張課程卡片的類型與學生數。
+    回傳 {"/courses/<slug>": {"type": "課程"|..., "students": int|None}}
+    """
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    result: dict[str, dict] = {}
+
+    # 每張課程卡片包含一個 class 含 "gkOCkQ" 的元素（顯示類型：課程/補給/服務…）
+    for type_el in soup.find_all(class_=re.compile(r"gkOCkQ")):
+        # 往上找包含 /courses/ 連結的祖先元素
+        ancestor = type_el.parent
+        link_el = None
+        for _ in range(12):
+            if ancestor is None:
+                break
+            link_el = ancestor.find("a", href=re.compile(r"/courses/\w"))
+            if link_el:
+                break
+            ancestor = ancestor.parent
+
+        if not link_el:
+            continue
+
+        url_path = link_el.get("href", "")         # e.g. "/courses/5a211b15..."
+        course_type = type_el.get_text(strip=True)  # "課程" / "補給" / "服務" …
+
+        # 在同一卡片中找學生數（class 含 "dvCJUj"）
+        students = None
+        if ancestor:
+            student_el = ancestor.find(class_=re.compile(r"dvCJUj"))
+            if student_el:
+                text = student_el.get_text(strip=True)
+                m = re.search(r"([\d,]+)", text)
+                if m:
+                    try:
+                        students = parse_int(m.group(1))
+                    except ValueError:
+                        pass
+
+        result[url_path] = {"type": course_type, "students": students}
+
+    return result
+
 # ── Discover 模式：爬列表頁取得課程清單（消耗 LLM credits）───────────────────
 
 def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
@@ -150,16 +197,16 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
                 break
             print(f"\n  [{platform}] 爬列表頁 → {page_url}")
             try:
+                formats = ["markdown", JsonFormat(
+                    type="json",
+                    prompt=config["list_prompt"],
+                    schema=CourseLinkPage.model_json_schema(),
+                )]
+                if platform == "hahow":
+                    formats = ["html"] + formats  # 額外取 HTML 供 CSS 選擇器解析
                 res = app.scrape(
                     url=page_url,
-                    formats=[
-                        "markdown",
-                        JsonFormat(
-                            type="json",
-                            prompt=config["list_prompt"],
-                            schema=CourseLinkPage.model_json_schema(),
-                        ),
-                    ],
+                    formats=formats,
                     wait_for=8000,
                     proxy="stealth",
                 )
@@ -203,6 +250,29 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
             if before_svc - len(courses):
                 print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆非課程頁面")
 
+            # Hahow：用 HTML 解析列表頁取得類型與學生數
+            if platform == "hahow":
+                html = getattr(res, "html", None) or ""
+                if html:
+                    from urllib.parse import urlparse
+                    card_data = parse_hahow_listing_html(html)
+                    # debug log
+                    types_found = {v["type"] for v in card_data.values() if v.get("type")}
+                    students_found = sum(1 for v in card_data.values() if v.get("students") is not None)
+                    print(f"  [hahow] HTML 解析：{len(card_data)} 卡片，類型={types_found}，有學生數={students_found}")
+                    enriched = []
+                    for c in courses:
+                        path = urlparse(c.get("url", "")).path  # "/courses/xxx"
+                        info = card_data.get(path, {})
+                        if info.get("type") and info["type"] != "課程":
+                            print(f"  [hahow] ⚠ 跳過「{info['type']}」: {c.get('course_name')}")
+                            continue
+                        c["students"] = info.get("students")
+                        enriched.append(c)
+                    courses = enriched
+                else:
+                    print(f"  [hahow] ⚠ HTML 為空，略過 CSS 選擇器過濾")
+
             # 跨頁去重（以 URL 為 key）
             for c in courses:
                 url = c.get("url", "")
@@ -221,7 +291,7 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
 # ── Update 模式 ───────────────────────────────────────────────────────────────
 
 def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]]) -> list[dict]:
-    """所有課程（Hahow & PressPlay）逐一進個別頁，用 markdown + regex 取學生數。"""
+    """更新學生數：Hahow 優先用列表頁已知數值，無則進內頁；PressPlay 逐一進內頁。"""
     rows: list[dict] = []
     scraped_at = datetime.now().isoformat(timespec="seconds")
 
@@ -233,8 +303,24 @@ def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]])
         for rank, course in enumerate(courses, start=1):
             url = course.get("url", "").strip()
             name = course.get("course_name", f"課程{rank}")
-            print(f"  [{rank}/{len(courses)}] {name}")
 
+            # 若 discover 時已從列表頁取得學生數，直接使用，不進內頁
+            existing = course.get("students")
+            if existing is not None:
+                print(f"  [{rank}/{len(courses)}] {name} → {existing}（列表已知，略過內頁）")
+                rows.append({
+                    "platform":    platform,
+                    "rank":        rank,
+                    "course_name": course.get("course_name", ""),
+                    "teacher":     course.get("teacher", ""),
+                    "price":       course.get("price"),
+                    "students":    existing,
+                    "course_url":  url,
+                    "scraped_at":  scraped_at,
+                })
+                continue
+
+            print(f"  [{rank}/{len(courses)}] {name}")
             students = None
             if url and url.startswith("http"):
                 # 策略：先用 stealth proxy；
