@@ -56,7 +56,12 @@ class CourseLinkPage(BaseModel):
 
 PLATFORMS = {
     "hahow": {
-        "list_url": "https://hahow.in/courses?page=1&sort=TRENDING",
+        "list_urls": [
+            "https://hahow.in/courses?page=1&sort=TRENDING",
+            "https://hahow.in/courses?page=2&sort=TRENDING",
+            "https://hahow.in/courses?page=3&sort=TRENDING",
+        ],
+        "max_courses": 50,
         "list_prompt": (
             "This page shows Hahow trending courses written in Traditional Chinese. "
             "The page may have a '近期熱門' (recently trending) featured section at the top — SKIP IT. "
@@ -79,7 +84,10 @@ PLATFORMS = {
         ],
     },
     "pressplay": {
-        "list_url": "https://www.pressplay.cc/project",
+        "list_urls": [
+            "https://www.pressplay.cc/project",
+        ],
+        "max_courses": 50,
         "list_prompt": (
             "This is the PressPlay project listing page in Traditional Chinese. "
             "IMPORTANT: Only extract projects that actually appear on this page. "
@@ -123,60 +131,73 @@ def extract_students_from_markdown(md: str, patterns: list[str]) -> int | None:
 # ── Discover 模式：爬列表頁取得課程清單（消耗 LLM credits）───────────────────
 
 def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
-    """爬各平台列表頁，回傳 {platform: [course_dict, ...]}。"""
+    """爬各平台列表頁（支援多頁），回傳 {platform: [course_dict, ...]}。"""
     result: dict[str, list[dict]] = {}
 
     for platform, config in PLATFORMS.items():
-        print(f"\n  [{platform}] 發現模式：爬列表頁 → {config['list_url']}")
-        try:
-            res = app.scrape(
-                url=config["list_url"],
-                formats=[
-                    "markdown",
-                    JsonFormat(
-                        type="json",
-                        prompt=config["list_prompt"],
-                        schema=CourseLinkPage.model_json_schema(),
-                    ),
-                ],
-                wait_for=8000,
-                proxy="stealth",
-            )
-        except Exception as exc:
-            print(f"  [{platform}] ✗ 列表頁爬取失敗：{exc}")
-            result[platform] = []
-            continue
+        list_urls   = config.get("list_urls", [])
+        max_courses = config.get("max_courses", 50)
+        seen_urls: set[str] = set()
+        all_courses: list[dict] = []
 
-        md = res.markdown or ""
-        if md:
-            print(f"  [{platform}] markdown 前 300 字：\n{md[:300]}\n  ---")
-        else:
-            print(f"  [{platform}] ⚠ markdown 為空")
+        for page_url in list_urls:
+            if len(all_courses) >= max_courses:
+                break
+            print(f"\n  [{platform}] 爬列表頁 → {page_url}")
+            try:
+                res = app.scrape(
+                    url=page_url,
+                    formats=[
+                        "markdown",
+                        JsonFormat(
+                            type="json",
+                            prompt=config["list_prompt"],
+                            schema=CourseLinkPage.model_json_schema(),
+                        ),
+                    ],
+                    wait_for=8000,
+                    proxy="stealth",
+                )
+            except Exception as exc:
+                print(f"  [{platform}] ✗ 列表頁爬取失敗：{exc}")
+                continue
 
-        data = res.json
-        if not data:
-            print(f"  [{platform}] ✗ 無結構化資料")
-            result[platform] = []
-            continue
+            md = res.markdown or ""
+            if not md:
+                print(f"  [{platform}] ⚠ markdown 為空")
 
-        courses = data.get("courses", []) if isinstance(data, dict) else []
+            data = res.json
+            if not data:
+                print(f"  [{platform}] ✗ 無結構化資料")
+                continue
 
-        # 防幻覺：過濾無中文課程名
-        if config.get("expect_chinese"):
-            before = len(courses)
-            courses = [c for c in courses if has_chinese(c.get("course_name", ""))]
-            if before - len(courses):
-                print(f"  [{platform}] ⚠ 過濾 {before - len(courses)} 筆幻覺課程")
+            courses = data.get("courses", []) if isinstance(data, dict) else []
 
-        # 過濾 /services/ 頁面（工作坊/服務，無學生數欄位）
-        before_svc = len(courses)
-        courses = [c for c in courses if "/services/" not in c.get("url", "")]
-        if before_svc - len(courses):
-            print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆服務/工作坊頁面")
+            # 防幻覺：過濾無中文課程名
+            if config.get("expect_chinese"):
+                before = len(courses)
+                courses = [c for c in courses if has_chinese(c.get("course_name", ""))]
+                if before - len(courses):
+                    print(f"  [{platform}] ⚠ 過濾 {before - len(courses)} 筆幻覺課程")
 
-        courses = courses[:20]
-        print(f"  [{platform}] ✓ 發現 {len(courses)} 門課程")
-        result[platform] = courses
+            # 過濾 /services/ 頁面
+            before_svc = len(courses)
+            courses = [c for c in courses if "/services/" not in c.get("url", "")]
+            if before_svc - len(courses):
+                print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆服務/工作坊頁面")
+
+            # 跨頁去重（以 URL 為 key）
+            for c in courses:
+                url = c.get("url", "")
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    all_courses.append(c)
+
+            print(f"  [{platform}] 本頁新增 {len(courses)} 門，累計 {len(all_courses)} 門")
+
+        all_courses = all_courses[:max_courses]
+        print(f"  [{platform}] ✓ 最終 {len(all_courses)} 門課程")
+        result[platform] = all_courses
 
     return result
 
