@@ -90,12 +90,21 @@ with st.sidebar:
         st.divider()
 
         def run_scraper(extra_args: list, spinner_msg: str):
+            # 明確把 Streamlit Secrets 注入 subprocess 環境
+            # （Streamlit Cloud 的 secrets 不一定自動出現在子 process 的 os.getenv）
+            env = os.environ.copy()
+            for key in ["FIRECRAWL_API_KEY", "SUPABASE_URL", "SUPABASE_KEY", "ADMIN_PASSWORD"]:
+                try:
+                    env[key] = st.secrets[key]
+                except (KeyError, Exception):
+                    pass
             with st.spinner(spinner_msg):
                 proc = subprocess.run(
                     [python_exec, str(scraper_path)] + extra_args,
                     capture_output=True,
                     text=True,
                     cwd=str(project_dir),
+                    env=env,
                 )
             if proc.returncode == 0:
                 st.success("完成！")

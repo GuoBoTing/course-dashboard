@@ -230,6 +230,7 @@ def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]])
                         url=url,
                         formats=["markdown"],
                         wait_for=5000,
+                        proxy="stealth",
                     )
                     md = res.markdown or ""
                     students = extract_students_from_markdown(md, patterns)
