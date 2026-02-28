@@ -75,7 +75,7 @@ with st.sidebar:
     if not st.session_state.is_admin:
         with st.form("login_form"):
             pwd = st.text_input("管理員密碼", type="password")
-            if st.form_submit_button("登入", use_container_width=True):
+            if st.form_submit_button("登入", width="stretch"):
                 if pwd == get_secret("ADMIN_PASSWORD"):
                     st.session_state.is_admin = True
                     st.rerun()
@@ -83,7 +83,7 @@ with st.sidebar:
                     st.error("密碼錯誤")
     else:
         st.caption(f"👤 管理員已登入")
-        if st.button("登出", use_container_width=True):
+        if st.button("登出", width="stretch"):
             st.session_state.is_admin = False
             st.rerun()
 
@@ -113,9 +113,9 @@ with st.sidebar:
         if last_scrape:
             st.caption(f"上次更新：{last_scrape}")
 
-        run_update   = st.button("🔄 更新學生數",   use_container_width=True, type="primary",
+        run_update   = st.button("🔄 更新學生數",   width="stretch", type="primary",
                                  help="只更新學生人數，markdown 模式（~20 credits）")
-        run_discover = st.button("🔍 重新發現課程", use_container_width=True,
+        run_discover = st.button("🔍 重新發現課程", width="stretch",
                                  help="重新爬列表頁取得最新排名，LLM 模式（~60 credits）")
         if run_update:
             run_scraper([], "更新學生數中（約 2～4 分鐘）…")
@@ -338,7 +338,7 @@ else:
         column_config={
             "連結": st.column_config.LinkColumn("連結", display_text="🔗 開啟"),
         },
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -389,7 +389,7 @@ else:
             labels={"date": "日期", "students": "學生人數"},
         )
         fig.update_layout(hovermode="x unified", legend_title="課程")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # ── 成長速度長條圖 ────────────────────────────────────────────────────────
 
@@ -429,7 +429,7 @@ else:
             xaxis_title="每日新增學生人數",
             showlegend=True,
         )
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 
 # ── 資料管理（管理員限定）────────────────────────────────────────────────────
 
@@ -458,7 +458,7 @@ if st.session_state.get("is_admin"):
     # 顯示時不顯示 id 欄，但保留在 DataFrame 供刪除使用
     st.dataframe(
         course_hist.drop(columns=["id"]),
-        use_container_width=True,
+        width="stretch",
         hide_index=False,
     )
 
