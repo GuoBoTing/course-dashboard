@@ -168,6 +168,12 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
             if before - len(courses):
                 print(f"  [{platform}] ⚠ 過濾 {before - len(courses)} 筆幻覺課程")
 
+        # 過濾 /services/ 頁面（工作坊/服務，無學生數欄位）
+        before_svc = len(courses)
+        courses = [c for c in courses if "/services/" not in c.get("url", "")]
+        if before_svc - len(courses):
+            print(f"  [{platform}] ⚠ 過濾 {before_svc - len(courses)} 筆服務/工作坊頁面")
+
         courses = courses[:20]
         print(f"  [{platform}] ✓ 發現 {len(courses)} 門課程")
         result[platform] = courses
