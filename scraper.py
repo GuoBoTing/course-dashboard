@@ -135,6 +135,54 @@ def extract_students_from_markdown(md: str, patterns: list[str]) -> int | None:
                 continue
     return None
 
+def parse_pressplay_listing_html(html: str) -> dict[str, dict]:
+    """
+    解析 PressPlay 列表頁 HTML。
+    回傳 {"/project/xxx": {"is_funding": bool, "students": int|None}}
+    - is_funding=True：集資課（列表只顯示達標%），必須進內頁用「人預購」抓數
+    - students：非集資課若列表已有「人學習」則直接使用
+    """
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    result: dict[str, dict] = {}
+    seen: set[str] = set()
+
+    # 找出集資課 URL（有 data-type="funding" 屬性的卡片）
+    funding_paths: set[str] = set()
+    for el in soup.find_all(attrs={"data-type": "funding"}):
+        ancestor = el
+        for _ in range(8):
+            if ancestor is None:
+                break
+            lnk = ancestor.find("a", href=re.compile(r"/project/"))
+            if lnk:
+                funding_paths.add(lnk.get("href", "").split("?")[0].rstrip("/"))
+                break
+            ancestor = getattr(ancestor, "parent", None)
+
+    # 逐一處理卡片連結
+    for link in soup.find_all("a", href=re.compile(r"/project/")):
+        raw_path = link.get("href", "").split("?")[0].rstrip("/")
+        if not raw_path or raw_path in seen:
+            continue
+        seen.add(raw_path)
+
+        is_funding = raw_path in funding_paths
+        students = None
+
+        if not is_funding:
+            card_text = link.get_text(separator=" ", strip=True)
+            m = re.search(r"([\d,]+)\s*人學習", card_text)
+            if m:
+                try:
+                    students = parse_int(m.group(1))
+                except ValueError:
+                    pass
+
+        result[raw_path] = {"is_funding": is_funding, "students": students}
+
+    return result
+
 def parse_hahow_listing_html(html: str) -> dict[str, dict]:
     """
     解析 Hahow 列表頁 HTML，透過 CSS class substring 找出每張課程卡片的類型與學生數。
@@ -202,7 +250,7 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
                     prompt=config["list_prompt"],
                     schema=CourseLinkPage.model_json_schema(),
                 )]
-                if platform == "hahow":
+                if platform in ("hahow", "pressplay"):
                     formats = ["html"] + formats  # 額外取 HTML 供 CSS 選擇器解析
                 res = app.scrape(
                     url=page_url,
@@ -273,6 +321,25 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
                 else:
                     print(f"  [hahow] ⚠ HTML 為空，略過 CSS 選擇器過濾")
 
+            # PressPlay：偵測集資課 + 嘗試從列表取學生數
+            if platform == "pressplay":
+                html = getattr(res, "html", None) or ""
+                if html:
+                    from urllib.parse import urlparse
+                    card_data = parse_pressplay_listing_html(html)
+                    funding_count   = sum(1 for v in card_data.values() if v["is_funding"])
+                    students_found  = sum(1 for v in card_data.values() if v.get("students") is not None)
+                    print(f"  [pressplay] HTML 解析：{len(card_data)} 卡片，集資課={funding_count}，有學生數={students_found}")
+                    for c in courses:
+                        # 正規化 URL path（去掉 /about 尾綴）
+                        raw = urlparse(c.get("url", "")).path.rstrip("/")
+                        path = raw[:-6] if raw.endswith("/about") else raw
+                        info = card_data.get(path, card_data.get(raw, {}))
+                        c["is_funding"] = info.get("is_funding", False)
+                        c["students"]   = info.get("students")  # None if funding or not found
+                else:
+                    print(f"  [pressplay] ⚠ HTML 為空，略過集資課偵測")
+
             # 跨頁去重（以 URL 為 key）
             for c in courses:
                 url = c.get("url", "")
@@ -320,7 +387,14 @@ def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]])
                 })
                 continue
 
-            print(f"  [{rank}/{len(courses)}] {name}")
+            # 集資課只用「人預購」pattern，避免誤抓達標百分比
+            if platform == "pressplay" and course.get("is_funding"):
+                course_patterns = [r"([\d,]+)\s*人預購"]
+                print(f"  [{rank}/{len(courses)}] {name}（集資課，進內頁抓人預購）")
+            else:
+                course_patterns = patterns
+                print(f"  [{rank}/{len(courses)}] {name}")
+
             students = None
             if url and url.startswith("http"):
                 # 策略：先用 stealth proxy；
@@ -343,7 +417,7 @@ def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]])
                         if len(md) < 1500 and attempt_no < len(attempts):
                             print(f"    ⚠ 第{attempt_no}次 markdown 過短({len(md)}字)，改用無proxy重試…")
                             continue
-                        students = extract_students_from_markdown(md, patterns)
+                        students = extract_students_from_markdown(md, course_patterns)
                         if students is not None:
                             break
                         if attempt_no < len(attempts):
