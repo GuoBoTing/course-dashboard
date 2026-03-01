@@ -135,20 +135,16 @@ def extract_students_from_markdown(md: str, patterns: list[str]) -> int | None:
                 continue
     return None
 
-def parse_pressplay_listing_html(html: str) -> dict[str, dict]:
+def parse_pressplay_listing_html(html: str) -> set[str]:
     """
     解析 PressPlay 列表頁 HTML。
-    回傳 {"/project/xxx": {"is_funding": bool, "students": int|None}}
-    - is_funding=True：集資課（列表只顯示達標%），必須進內頁用「人預購」抓數
-    - students：非集資課若列表已有「人學習」則直接使用
+    回傳集資課的 URL path set（有 data-type="funding" 的卡片）。
+    一般課的學生數不在列表頁，一律進內頁取得。
     """
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, "html.parser")
-    result: dict[str, dict] = {}
-    seen: set[str] = set()
-
-    # 找出集資課 URL（有 data-type="funding" 屬性的卡片）
     funding_paths: set[str] = set()
+
     for el in soup.find_all(attrs={"data-type": "funding"}):
         ancestor = el
         for _ in range(8):
@@ -160,28 +156,7 @@ def parse_pressplay_listing_html(html: str) -> dict[str, dict]:
                 break
             ancestor = getattr(ancestor, "parent", None)
 
-    # 逐一處理卡片連結
-    for link in soup.find_all("a", href=re.compile(r"/project/")):
-        raw_path = link.get("href", "").split("?")[0].rstrip("/")
-        if not raw_path or raw_path in seen:
-            continue
-        seen.add(raw_path)
-
-        is_funding = raw_path in funding_paths
-        students = None
-
-        if not is_funding:
-            card_text = link.get_text(separator=" ", strip=True)
-            m = re.search(r"([\d,]+)\s*人學習", card_text)
-            if m:
-                try:
-                    students = parse_int(m.group(1))
-                except ValueError:
-                    pass
-
-        result[raw_path] = {"is_funding": is_funding, "students": students}
-
-    return result
+    return funding_paths
 
 def parse_hahow_listing_html(html: str) -> dict[str, dict]:
     """
@@ -321,22 +296,18 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
                 else:
                     print(f"  [hahow] ⚠ HTML 為空，略過 CSS 選擇器過濾")
 
-            # PressPlay：偵測集資課 + 嘗試從列表取學生數
+            # PressPlay：從列表 HTML 偵測集資課，決定內頁使用哪個 pattern
+            # （PressPlay 列表不顯示學生數，一律進內頁）
             if platform == "pressplay":
                 html = getattr(res, "html", None) or ""
                 if html:
                     from urllib.parse import urlparse
-                    card_data = parse_pressplay_listing_html(html)
-                    funding_count   = sum(1 for v in card_data.values() if v["is_funding"])
-                    students_found  = sum(1 for v in card_data.values() if v.get("students") is not None)
-                    print(f"  [pressplay] HTML 解析：{len(card_data)} 卡片，集資課={funding_count}，有學生數={students_found}")
+                    funding_paths = parse_pressplay_listing_html(html)
+                    print(f"  [pressplay] HTML 解析：偵測到 {len(funding_paths)} 門集資課")
                     for c in courses:
-                        # 正規化 URL path（去掉 /about 尾綴）
-                        raw = urlparse(c.get("url", "")).path.rstrip("/")
+                        raw  = urlparse(c.get("url", "")).path.rstrip("/")
                         path = raw[:-6] if raw.endswith("/about") else raw
-                        info = card_data.get(path, card_data.get(raw, {}))
-                        c["is_funding"] = info.get("is_funding", False)
-                        c["students"]   = info.get("students")  # None if funding or not found
+                        c["is_funding"] = path in funding_paths or raw in funding_paths
                 else:
                     print(f"  [pressplay] ⚠ HTML 為空，略過集資課偵測")
 
