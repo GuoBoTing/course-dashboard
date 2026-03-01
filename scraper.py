@@ -135,16 +135,20 @@ def extract_students_from_markdown(md: str, patterns: list[str]) -> int | None:
                 continue
     return None
 
-def parse_pressplay_listing_html(html: str) -> set[str]:
+def parse_pressplay_listing_html(html: str) -> dict[str, dict]:
     """
     解析 PressPlay 列表頁 HTML。
-    回傳集資課的 URL path set（有 data-type="funding" 的卡片）。
-    一般課的學生數不在列表頁，一律進內頁取得。
+    回傳 {"/project/xxx": {"is_funding": bool, "students": int|None}}
+    - is_funding=True：集資課（列表顯示達標%），進內頁用「人預購」
+    - students：非集資課從卡片第二個 project-card-metadata-item > metadata-content 取得
+      （若該結構不存在則 students=None，仍進內頁）
     """
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, "html.parser")
-    funding_paths: set[str] = set()
+    result: dict[str, dict] = {}
 
+    # 找出集資課 URL（有 data-type="funding" 屬性的卡片）
+    funding_paths: set[str] = set()
     for el in soup.find_all(attrs={"data-type": "funding"}):
         ancestor = el
         for _ in range(8):
@@ -156,7 +160,36 @@ def parse_pressplay_listing_html(html: str) -> set[str]:
                 break
             ancestor = getattr(ancestor, "parent", None)
 
-    return funding_paths
+    # 逐一處理卡片
+    seen: set[str] = set()
+    for link in soup.find_all("a", href=re.compile(r"/project/")):
+        raw_path = link.get("href", "").split("?")[0].rstrip("/")
+        if not raw_path or raw_path in seen:
+            continue
+        seen.add(raw_path)
+
+        is_funding = raw_path in funding_paths
+        students = None
+
+        if not is_funding:
+            # 第二個 project-card-metadata-item 內的 metadata-content 就是學生數
+            metadata = link.find(class_="project-card-metadata")
+            if metadata:
+                items = metadata.find_all(class_="project-card-metadata-item")
+                if len(items) >= 2:
+                    content_el = items[1].find(class_="metadata-content")
+                    if content_el:
+                        text = content_el.get_text(strip=True)
+                        m = re.search(r"([\d,]+)", text)
+                        if m:
+                            try:
+                                students = parse_int(m.group(1))
+                            except ValueError:
+                                pass
+
+        result[raw_path] = {"is_funding": is_funding, "students": students}
+
+    return result
 
 def parse_hahow_listing_html(html: str) -> dict[str, dict]:
     """
@@ -296,18 +329,21 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
                 else:
                     print(f"  [hahow] ⚠ HTML 為空，略過 CSS 選擇器過濾")
 
-            # PressPlay：從列表 HTML 偵測集資課，決定內頁使用哪個 pattern
-            # （PressPlay 列表不顯示學生數，一律進內頁）
+            # PressPlay：從列表 HTML 取學生數；集資課標記後進內頁
             if platform == "pressplay":
                 html = getattr(res, "html", None) or ""
                 if html:
                     from urllib.parse import urlparse
-                    funding_paths = parse_pressplay_listing_html(html)
-                    print(f"  [pressplay] HTML 解析：偵測到 {len(funding_paths)} 門集資課")
+                    card_data = parse_pressplay_listing_html(html)
+                    funding_count  = sum(1 for v in card_data.values() if v["is_funding"])
+                    students_found = sum(1 for v in card_data.values() if v.get("students") is not None)
+                    print(f"  [pressplay] HTML 解析：集資課={funding_count}，有學生數={students_found}")
                     for c in courses:
                         raw  = urlparse(c.get("url", "")).path.rstrip("/")
                         path = raw[:-6] if raw.endswith("/about") else raw
-                        c["is_funding"] = path in funding_paths or raw in funding_paths
+                        info = card_data.get(path, card_data.get(raw, {}))
+                        c["is_funding"] = info.get("is_funding", False)
+                        c["students"]   = info.get("students")  # None → 進內頁
                 else:
                     print(f"  [pressplay] ⚠ HTML 為空，略過集資課偵測")
 
@@ -329,7 +365,7 @@ def discover_courses(app: FirecrawlApp) -> dict[str, list[dict]]:
 # ── Update 模式 ───────────────────────────────────────────────────────────────
 
 def update_student_counts(app: FirecrawlApp, course_list: dict[str, list[dict]]) -> list[dict]:
-    """更新學生數：Hahow 優先用列表頁已知數值，無則進內頁；PressPlay 逐一進內頁。"""
+    """更新學生數：列表頁已有數值則直接使用；PressPlay 集資課一律進內頁用「人預購」。"""
     rows: list[dict] = []
     scraped_at = datetime.now().isoformat(timespec="seconds")
 
